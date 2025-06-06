@@ -1,0 +1,652 @@
+---
+title: "Tarea del curso: The Analysis of Categorical and Count Data"
+author: "Yan Carlos Leyva Labrador"
+date: "11 de octubre de 2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(vcd)
+library(readr)
+library(ResourceSelection)
+library(readxl)
+infection <- read_table2("C:/Users/Mercedes Mena/Desktop/trabajo/yan casa/copia2/Maestria/Yan 2020/Variable categórica/CatData-SlidesExer2020/infection.r")
+kyphosis <- read_table2("C:/Users/Mercedes Mena/Desktop/trabajo/yan casa/copia2/Maestria/Yan 2020/Variable categórica/CatData-SlidesExer2020/kyphosis.r")
+malaria <- read_table2("C:/Users/Mercedes Mena/Desktop/trabajo/yan casa/copia2/Maestria/Yan 2020/Variable categórica/CatData-SlidesExer2020/malaria.r")
+SAheart <- read_table2("C:/Users/Mercedes Mena/Desktop/trabajo/yan casa/copia2/Maestria/Yan 2020/Variable categórica/CatData-SlidesExer2020/SAheart.r")
+SpaceShuttle <- read_table2("C:/Users/Mercedes Mena/Desktop/trabajo/yan casa/copia2/Maestria/Yan 2020/Variable categórica/CatData-SlidesExer2020/SpaceShuttle.r")
+womlab <- read_table2("C:/Users/Mercedes Mena/Desktop/trabajo/yan casa/copia2/Maestria/Yan 2020/Variable categórica/CatData-SlidesExer2020/womlab.r")
+bd <- read_excel("C:/Users/Mercedes Mena/Desktop/trabajo/yan casa/copia2/Maestria/Yan 2020/Variable categórica/CatData-SlidesExer2020/tarea/Libro1.xlsx")
+
+space <- read_delim("C:/Users/Mercedes Mena/Desktop/trabajo/yan casa/copia2/Maestria/Yan 2020/Variable categórica/CatData-SlidesExer2020/Libro1.csv", 
+    ";", escape_double = FALSE, trim_ws = TRUE)
+
+```
+
+## Practical Problems 1
+
+In Costa Rica, the vampire bat Desmodus rotundus feeds on the blood of domestic cattle. If the bats respond to a hormonal signal, cows in estrous (in heat) may be bitten with a diferent probability than cows not in estrous. (The researcher could tell the diference by harnessing painted sponges to the undersides of bulls who would leave their mark during the night.)
+
+```{r, echo=FALSE}
+table1=matrix( c(15,7,22,6,322,328,21,329,350),3,3,dimnames = list(Bitten=c('Bitten by a bat','Not bitten by a bat','Total'),Estrous=c('In estrous','Not in estrous','Total')))
+
+# dimnames=list(Treatment=c("Placebo","Aspirin"),
+# MI=c("Yes","No"))
+# colnames(table1)=c('In estrous','Not in estrous','Total')
+# rownames(table1)=c('Bitten by a bat','Not bitten by a bat','Total')
+print(table1)
+```
+
+### Answer:
+
+
+The relative risk $\widehat{\psi }_{Bitten}$ is:
+
+```{r , echo=FALSE}
+p1=table1[1,1]/table1[3,1]
+p2=table1[1,2]/table1[3,2]
+sd_risk=sqrt((p2^(-4))*((p2^(2))*p1*(1-p1)/(table1[3,1]/table1[3,3])+(p1^(2))*p2*(1-p2)/(table1[3,2]/table1[3,3]))/table1[3,3])
+risk=p1/p2
+
+print(risk)
+```
+$\widehat{\psi }_{Bitten}=37.27$
+
+The asymptotic confidence interval based on the direct approach is given by:
+
+```{r , echo=FALSE}
+interval_risk=matrix(c(round(risk-qnorm(0.975)*sd_risk,2),round(risk+qnorm(0.975)*sd_risk,2)),1,2,dimnames = list(c('Value'),Limit=c('Lower Limit','Upper Limit')))
+print(interval_risk)
+```
+
+Then  the relative risk is less than 1. Also we cant  that cows in estrous to be bitten with a different probability than cows not in estrous. Also the proportion crow in estrous bitten by a bat was 37.3 times higher for the crow Not in estrous bitten by a bat.
+
+```{r , echo=FALSE}
+table2=table1[1:2,1:2]
+OR=oddsratio(t(table2),log=FALSE)
+print(OR)
+print(confint(OR))
+```
+
+
+
+```{r , echo=FALSE}
+table2=table1[1:2,1:2]
+lOR=oddsratio(t(table2),log=TRUE)
+print(lOR)
+print(confint(lOR))
+```
+
+Thus, $OR > 1$ and we have that probability to be bitten by a bat if the cows is in estrous is significantly higher than probability to be bitten by a bat if the cows is not in estrous.
+
+## Practical Problems 2
+
+(from Agresti) The following table shows data from the 2002 General Social Survey cross classifying a person's perceived happiness with their family income.
+
+```{r, echo=FALSE}
+ Happiness_Income=matrix(c(21,53,94,168,159,372,249,780,110,221,83,414,290,646,426,1362),4,4,dimnames = list(Income=c('Above Average','Average','Below Average','Total'),Happiness=c('Not Too Happy','Pretty Happy','Very Happy','Total')))
+
+# dimnames=list(Treatment=c("Placebo","Aspirin"),
+# MI=c("Yes","No"))
+# colnames(table1)=c('In estrous','Not in estrous','Total')
+# rownames(table1)=c('Bitten by a bat','Not bitten by a bat','Total')
+print(Happiness_Income)
+```
+
+Are Happiness and Income independent?
+
+
+### Answer:
+```{r, echo=FALSE}
+Happiness_Income=Happiness_Income[1:3,1:3]
+mosaicplot(Happiness_Income,color = 1:3)
+
+print(assocstats(Happiness_Income))
+```
+
+It is highly significant that the Happiness and the group of Income are not independent.
+
+
+## Practical Problems 3
+
+To investigate the the rate of sprouted seeds in two different kinds of water rainwater, muddy water,and tap water were used to water 100 seeds each. Then they were checked and noted how many of those seeds sprouted. The result is presented in the following table:
+
+```{r, echo=FALSE}
+Water_Sprouted=matrix( c(64,74,60,198,36,26,40,102,100,100,100,300),4,3,dimnames = list(`Water Type`=c('Rain Water','Muddy Water','Tap Water','Total'),Sprouted=c('Yes','No','Total')))
+
+# dimnames=list(Treatment=c("Placebo","Aspirin"),
+# MI=c("Yes","No"))
+# colnames(table1)=c('In estrous','Not in estrous','Total')
+# rownames(table1)=c('Bitten by a bat','Not bitten by a bat','Total')
+print(Water_Sprouted)
+```
+
+The question is whether the type of the water has an effect on the probability for a seed to sprout.
+
+### Answer:
+
+```{r, echo=FALSE}
+Water_Sprouted=(Water_Sprouted[1:3,1:2])
+print(chisq.test(Water_Sprouted))
+```
+
+
+There is a significant difference of the type of the water. Then the different water type has an effect on the probability for a seed to sprout.
+
+
+
+
+
+## Practical Problems 4
+
+(From Agresti) The following table comes from one of the first studies of the link between lung cancer and smoking, by Richard Doll and A. Bradford Hill. In 20 hospitals in London, UK, patients admitted with lung cancer in the previous year were queried about their smoking behavior. For each patient admitted, researchers studied the smoking behavior of a noncancer control patient at the same hospital of the same sex and within the same 5-year grouping on age. A smoker was defined
+as a person who had smoked at least one cigarette a day for at least a year.
+
+(a) Identify the response variable and the explanatory variable.
+(b) Identify the type of study this was.
+(c) Can you use these data to compare smokers with nonsmokers in terms of the proportion who suffered lung cancer? Why or why not?
+(d) Summarize the association, and explain how to interpret it.
+(e) Apply a suitable test procedure.
+
+
+```{r, echo=FALSE}
+Cancer_Smoked=matrix( c(688,21,709,650,59,709),3,2,dimnames = list(`Have Smoked`=c('Yes','No','Total'),`Lung Cancer`=c('Not Cases','Control')))
+
+# dimnames=list(Treatment=c("Placebo","Aspirin"),
+# MI=c("Yes","No"))
+# colnames(table1)=c('In estrous','Not in estrous','Total')
+# rownames(table1)=c('Bitten by a bat','Not bitten by a bat','Total')
+print(Cancer_Smoked)
+```
+
+
+
+### Answer (a):
+(-) Response variable: Lung Cancer
+
+(-) Explanatory variable: Have Smoked
+
+### Answer (b):
+
+The type of study was: Retrospective studies.
+
+### Answer (c)
+
+if i need design a study to compare smokers with nonsmokers in terms of the proportion who suffered lung cancer, the first that i think is: 
+- Take a random sample of people and then put each people in a class (smokers, nonsmokers, lung cancer and not lung cancer) but in the population are few people whit lung cancer, then is necessary select a big sample of people to find people with lung cancer. 
+This design not is good because require large expenditure on resources.
+
+For the reason explain above, the best design to compare smokers with nonsmokers in terms of the proportion who suffered lung cancer is the design expose in this exercise.
+
+### Answer (d)
+
+This association is a contingency table that referee to Model II, in this table we have two group the firs group it is conformed by people whit lung cancer and the second group include the control person, also the people are classify according they smoking behavior.   
+
+### Answer (e)
+
+Steps for the construction of test:
+ 
+Step 1: Select the hypothesis $H_0$ and $H_1$;  
+$H_0: {{p}_{1}}\le {{p}_{2}}$  
+$H_1: {{p}_{1}}> {{p}_{2}}$  
+
+${{p}_{1}}$ is the probability of a person smoker  given that have lung cancer.
+${{p}_{2}}$ is the probability of a person smoker  given that is inside control group.
+
+
+Step 2: Fix the level of the test or the 1st type error equal to $\alpha$;  
+$\alpha = 0.05$  
+
+Step 3: Select the test statistic, $t$;  
+$t=\frac{{\hat{\theta }}}{se\left( {\hat{\theta }} \right)}\sim N \left( 0,1 \right)$
+
+Where:
+$\widehat{\theta }={{\widehat{p}}_{1}}-{{\widehat{p}}_{2}}$ and $se\left( \widehat{\theta } \right)=\sqrt{\frac{{{\widehat{p}}_{1}}\left( 1-{{\widehat{p}}_{1}} \right)}{{{n}_{1}}}+\frac{{{\widehat{p}}_{2}}\left( 1-{{\widehat{p}}_{2}} \right)}{{{n}_{2}}}}$
+
+
+Step 4: Determine the form of the rejection region $W$, depending on the behavior of $t$ under $H_1$;  
+$W=\left\{ t>{{Z}_{1-0.05}} \right\}$
+
+Step 5: Explicitly compute the rejection region $W$ according to $\alpha$;
+
+$W=\left\{ \left( \text{1}\text{.644854},\infty  \right) \right\}$
+
+```{r, echo=FALSE}
+x2=seq(qnorm(0.95),4,length.out =1000) 
+x3=seq(-4,qnorm(0.95),length.out =1000) 
+
+plot(x2,dnorm(x2),type = 'h',col='red',xlim = c(-4,4),ylim = c(0,0.4),ylab = '',xlab = '',main = 'Normal density function')
+points(x3,dnorm(x3),type = 'h',col='green')
+legend('topright',legend = c('Rejection region','Accept region'),col=c('red','green'),pch=c(16,16))
+
+
+```
+
+
+Step 6: Compute the observed value, $t$, for the test statistic $t$;  
+
+```{r , echo=FALSE}
+table1=Cancer_Smoked
+n1=table1[1,1]+table1[2,1]
+n2=table1[1,2]+table1[2,2]
+p1=table1[1,1]/n1
+p2=table1[1,2]/n2
+
+test1=matrix( c(p1,p2,p1-p2,sqrt((p1*(1-p1)/n1)+(p2*(1-p2)/n2)),(p1-p2)/sqrt((p1*(1-p1)/n1)+(p2*(1-p2)/n2))),1,5,dimnames = list(c('Value'),Parameters=c('p1','p2','theta','sd(theta)','t')))
+print(test1)
+```
+
+
+Step 7: According to $t$, decide whether to accept or not $H_0$.  
+
+
+```{r , echo=FALSE}
+
+x2=seq(qnorm(0.95),7,length.out =1000) 
+x3=seq(-7,qnorm(0.95),length.out =1000) 
+
+plot(x2,dnorm(x2),type = 'h',col='red',xlim = c(-7,7),ylim = c(0,0.4),ylab = '',xlab = '',main = 'Normal density function')
+points(x3,dnorm(x3),type = 'h',col='green')
+points(test1[1,5],0,type = 'p',pch=c(16),col='black')
+points(test1[1,5],-0.08,type = 'p',pch=c('t'),col='black')
+legend('topright',legend = c('Rejection region','Accept region','Observed value t'),col=c('red','green','black'),pch=c(16,16,16))
+```
+
+
+
+As $t$ it is in rejection region $W$ $(t\in W)$, we reject $H_0$ and accept $H_1$, therefore  ${{p}_{1}}> {{p}_{2}}$. Then we cant conclude that the to smoker increase the probability to get lung cancer.
+
+
+Also the relative risk $\widehat{\psi }$ is:
+
+```{r , echo=FALSE}
+
+sd_risk=sqrt((p2^(-4))*((p2^(2))*p1*(1-p1)/(n1/(n1+n2))+(p1^(2))*p2*(1-p2)/(n2/(n1+n2)))/(n1+n2))
+risk=test1[1,1]/test1[1,2]
+
+print(risk)
+```
+$\widehat{\psi }=1.058$
+
+The asymptotic confidence interval based on the direct approach is given by:
+
+```{r , echo=FALSE}
+interval_risk=matrix(c(round(risk-qnorm(0.975)*sd_risk,2),round(risk+qnorm(0.975)*sd_risk,2)),1,2,dimnames = list(c('Value'),Limit=c('Lower Limit','Upper Limit')))
+print(interval_risk)
+```
+
+Then  the relative risk is less than 1. Also we cant ratify that the to smoker increase the probability to get lung cancer.
+
+The OR is:
+
+
+```{r , echo=FALSE}
+table2=table1[1:2,1:2]
+OR=oddsratio(t(table2),log=FALSE)
+print(OR)
+print(confint(OR))
+```
+The conclusion is analogue to the case of relative risk.
+
+## Practical Problems 5
+
+A company filling grass seed bags wants to evaluate their filling machine. The following distribution
+is advertised on their bags, where T1-T5 are different kinds of grass seeds:
+
+```{r, echo=FALSE}
+table1=matrix( c(0.5,0.25,0.15,0.05,0.05),1,5,dimnames = list(c('Prob.'),Kind=c('T1','T2','T3','T4','T5')))
+
+# dimnames=list(Treatment=c("Placebo","Aspirin"),
+# MI=c("Yes","No"))
+# colnames(table1)=c('In estrous','Not in estrous','Total')
+# rownames(table1)=c('Bitten by a bat','Not bitten by a bat','Total')
+print(table1)
+```
+The company wants to check if the seed distribution in the bags fits the advertised distribution.
+They take a sample of size 1000 and find the following summarized data:
+
+```{r, echo=FALSE}
+table2=matrix( c(480,233,160,63,64),1,5,dimnames = list(c('Count.'),Kind=c('T1','T2','T3','T4','T5')))
+
+# dimnames=list(Treatment=c("Placebo","Aspirin"),
+# MI=c("Yes","No"))
+# colnames(table1)=c('In estrous','Not in estrous','Total')
+# rownames(table1)=c('Bitten by a bat','Not bitten by a bat','Total')
+print(table2)
+```
+
+
+Does the seed distribution in the bags correspond correctly to the advertised distribution?
+
+### Answer
+
+For Kind T1:
+
+Steps for the construction of test:
+ 
+Step 1: Select the hypothesis $H_0$ and $H_1$;  
+$H_0: p={{p}_{0}}$  
+$H_1: p\ne {{p}_{0}}$  
+
+
+Step 2: Fix the level of the test or the 1st type error equal to $\alpha$;  
+$\alpha = 0.05$  
+
+Step 3: Select the test statistic, $t$;  
+$t=\sum\limits_{i=1}^{n}{{{Y}_{i}}}\sim B\left( n,p \right)$
+
+Step 4: Determine the form of the rejection region $W$, depending on the behavior of $t$ under $H_1$;  
+$W=\left\{ \left( -\infty ,{{b}_{\frac{\alpha }{2}}} \right]\cup \left[ {{b}_{1-\frac{\alpha }{2}}},\infty  \right) \right\}$
+
+where ${{b}_{\alpha }}$ is the $\alpha$ quantile of the binomial distribution $B\left( n,p \right)$
+
+
+Step 5: Explicitly compute the rejection region $W$ according to $\alpha$;
+
+$W=\left\{ \left( -\infty ,469 \right]\cup \left[ 531,\infty  \right) \right\}$
+
+
+```{r, echo=FALSE}
+prob1=0.5
+x2=seq(0,qbinom(0.025,1000,prob1),1)
+x1=seq(qbinom(0.975,1000,prob1),1000,1)
+x3=seq(qbinom(0.025,1000,prob1),qbinom(0.975,1000,prob1),1)  
+
+plot(x1,dbinom(x1,1000,prob1),type = 'h',col='red',xlim = c(400,600),ylim = c(0,0.03),ylab = '',xlab = '',main = 'Binomial density function')
+points(x2,dbinom(x2,1000,prob1),type = 'h',col='red')
+points(x3,dbinom(x3,1000,prob1),type = 'h',col='green')
+legend('topright',legend = c('Rejection region','Accept region'),col=c('red','green'),pch=c(16,16))
+
+
+```
+Step 6: Compute the observed value, $t$, for the test statistic $t$;  
+
+```{r , echo=FALSE}
+print(paste('t=',table2[1,1]))
+```
+
+
+Step 7: According to $t$, decide whether to accept or not $H_0$.  
+
+
+```{r , echo=FALSE}
+
+x2=seq(0,qbinom(0.025,1000,prob1),1)
+x1=seq(qbinom(0.975,1000,prob1),1000,1)
+x3=seq(qbinom(0.025,1000,prob1),qbinom(0.975,1000,prob1),1)  
+
+plot(x1,dbinom(x1,1000,prob1),type = 'h',col='red',xlim = c(400,600),ylim = c(0,0.03),ylab = '',xlab = '',main = 'Binomial density function')
+points(x2,dbinom(x2,1000,prob1),type = 'h',col='red')
+points(x3,dbinom(x3,1000,prob1),type = 'h',col='green')
+points(table2[1,1],0,type = 'p',pch=c(16),col='black')
+points(table2[1,1],-0.08,type = 'p',pch=c('t'),col='black')
+legend('topright',legend = c('Rejection region','Accept region','Observed value t'),col=c('red','green','black'),pch=c(16,16,16))
+
+```
+
+As $t$  is not in rejection region $W$ $(t\notin W)$, we accept $H_0$, therefore  ${{p}}= {{p}_{0}}$.
+
+
+Then Yes, there is a correspondence between the distribution of the seed bags of the kind T1 and the advertised distribution
+
+
+Is analogue for T2,T3,T4 and T5.
+
+Use R function we have:
+
+```{r, echo=FALSE}
+for (i in 1:5) {
+  Kind=table2
+  print(paste('For Kind',colnames(table1)[i]))
+  print(binom.test(Kind[1,i],1000,table1[1,i],"two.sided"))
+  bnT=binom.test(Kind[1,i],1000,table1[1,i],"two.sided")
+  if(bnT$p.value>=0.05){
+    print(paste('Yes, there is a correspondence between the distribution of the seed '))
+    print(paste('bags of the kind',colnames(table1)[i],' and the advertised distribution'))
+    print(' ')
+    print(' ')
+    print(' ')
+  }
+  
+  if(bnT$p.value<0.05){
+    print(paste('No, there is not correspondence between the distribution of the seed '))
+    print(paste('bags of the kind',colnames(table1)[i],' and the advertised distribution'))
+    print(' ')
+    print(' ')
+    print(' ')
+  }
+}
+```
+
+
+## Practical Problems 6
+
+Consider the example "Blood pressure" discussed in the slides.
+
+(a) We can fit a logistic regression model taking as explanatory variables the values
+
+```{r, echo=FALSE}
+Pressure=matrix(c(111.5, 121.5, 131.5, 141.5, 151.5, 161.5, 176.5, 191.5),1,8,dimnames = list(Pressure=c('Value')))
+# dimnames=list(Treatment=c("Placebo","Aspirin"),
+# MI=c("Yes","No"))
+# colnames(table1)=c('In estrous','Not in estrous','Total')
+# rownames(table1)=c('Bitten by a bat','Not bitten by a bat','Total')
+print(Pressure)
+```
+(b) Fit the logistic regression and compare the fitted probabilities with the relative interval fre-quencies.
+(c) In the data set $bpchol.r$ also the cholesterol level is given. Fit a logistic regression that describes the effect of cholesterol on heart disease.
+(d) Fit a logistic regression model that simultaneously describes the effects of cholesterol and blood pressure on heart disease.
+
+### Answer (a):
+We can fit a logistic regression model with the variables:
+
+```{r, echo=FALSE}
+Pressure=matrix(c(111.5, 121.5, 131.5, 141.5, 151.5, 161.5, 176.5, 191.5,3,17,12,16,12,8,16,8,153,235,272,255,127,77,83,35),8,3,dimnames = list(Pressure=c(1:8),`Heart Disease`=c('Pressure','Present','Absent')))
+# dimnames=list(Treatment=c("Placebo","Aspirin"),
+# MI=c("Yes","No"))
+# colnames(table1)=c('In estrous','Not in estrous','Total')
+# rownames(table1)=c('Bitten by a bat','Not bitten by a bat','Total')
+print(Pressure)
+
+
+# a=as.data.frame(rep(bd$Age,2))
+# colnames(a)='Edad'
+# a$val=rep(c(1,0),c(dim(bd)[1],dim(bd)[1]))
+# a$rep=c(bd$died,bd$survived)
+# 
+# b=as.data.frame(rep(a$Edad,a$rep))
+# colnames(b)='Edad'
+# b$val=rep(a$val,a$rep)
+# 
+# model=( glm(val~Edad,data = b,
+#              family =binomial()))
+# summary(model)
+# colnames(bd)=c('Edad',"died" ,    "survived")
+# model%>%predict(bd,type='response')
+# confint(glm(val~Edad,data = b,
+#              family =binomial))
+
+```
+
+
+
+
+### Answer (b):
+Fit the logistic regression:
+
+```{r, echo=FALSE}
+Pressure=as.data.frame(Pressure)
+a=as.data.frame(rep(Pressure$Pressure,2))
+colnames(a)='Pressure'
+a$val=rep(c(1,0),c(dim(Pressure)[1],dim(Pressure)[1]))
+a$rep=c(Pressure$Present,Pressure$Absent)
+
+b=as.data.frame(rep(a$Pressure,a$rep))
+colnames(b)='Pressure'
+b$`Heart Disease`=rep(a$val,a$rep)
+Pressure_expand=b
+
+summary( glm(`Heart Disease`~Pressure,data = Pressure_expand,
+             family =binomial))
+confint(glm(`Heart Disease`~Pressure,data = Pressure_expand,
+             family =binomial))
+modelo=glm(`Heart Disease`~Pressure,data = Pressure_expand,
+             family =binomial)
+ggplot(data = Pressure_expand,aes(x=Pressure,y=`Heart Disease`))+
+  geom_point(aes(color=as.factor(`Heart Disease`)),shape=16)+
+  stat_function(fun = function(x){
+    predict(modelo,newdata=data.frame(Pressure=x),type='response')})+
+  theme_bw()+
+  labs(title = 'Logistic Regression',y='Probability')+
+  theme(legend.position = 'none')
+```
+Compare the fitted probabilities with the relative interval frequencies
+
+```{r, echo=FALSE}
+logist=function(x){
+  return(exp(x)/(1+exp(x)))
+}
+Pressure$fit=predict(modelo,Pressure,se.fit=TRUE)[['fit']]
+Pressure$se.fit=predict(modelo,Pressure,se.fit=TRUE)[['se.fit']]
+Pressure$`Fit Lower Limit`=Pressure$fit-qnorm(0.975)*Pressure$se.fit
+Pressure$`Fit Upper Limit`=Pressure$fit+qnorm(0.975)*Pressure$se.fit
+
+Pressure$logist.fit=logist(Pressure$fit)
+
+Pressure$`Logist Fit Lower Limit`=logist(Pressure$`Fit Lower Limit`)
+Pressure$`Logist Fit Upper Limit`=logist(Pressure$`Fit Upper Limit`)
+Pressure$`Relative Frequencies`=Pressure$Present/(Pressure$Present+Pressure$Absent)
+
+
+ggplot(Pressure,aes(Pressure)) +
+  geom_ribbon(aes(ymin = `Logist Fit Lower Limit`, ymax = `Logist Fit Upper Limit`), fill =  'lightblue1') +
+  geom_line(aes(y = `logist.fit`),color="blue")+
+  theme_classic()+
+  geom_point(aes(y=`Relative Frequencies`),colour='red',shape=16)+
+  xlab('Pressure')+
+  ylab('Probability')+
+  scale_x_continuous(breaks =  Pressure$Pressure)
+  # scale_color_manual(name='model fit',
+  #                      labels=c('Fitted probabilities','Fitted probabilities interval','Relative frequencies'),
+  #                      breaks=c('blue',"lightblue1",'red'),
+  #                      guide = 'legend')
+
+  # legend('topright',legend = c('Fitted probabilities','Fitted probabilities interval','Relative frequencies'),col=c('blue',"lightblue1",'red'),pch=c(16,16,16))
+
+
+
+
+```
+Legend:
+
+red point: relative frequencies
+
+line blue: fitted probabilities
+
+area light blue: confidence interval to 95%
+
+We conclude that for almost all cases the relative frequencies is inside of confidence interval to 95%.
+
+
+
+### Answer (c):
+The data set $bpchol.r$ is not in the curse folder.
+
+### Answer (d):
+The data set $bpchol.r$ is not in the curse folder.
+
+
+
+## Practical Problems 7
+
+On February 28, 1986, the space shuttle Challenger took on the 25th flight in NASA's space shuttle program. Less than 2 minutes into the flight, the spacecraft exploded, killing all on board. The space shuttle uses two booster rockets to help lift it into the orbit. Each booster rocket consists of
+several pieces whose joints are sealed with rubber O-rings, which are designed to prevent the release
+of hot gases produced during combustion. Each booster contains 3 primary O-rings (for a total of
+6 for the orbiter). In the 23 previous 
+flights the O-rings were examined for damage. One interesting
+question is the relationship of O-ring damage to temperature, particularly since it was forecast to
+be cold on the morning of January 28, 1986 $\left( 31{}^\circ F \right)$. There was a good deal discussion among the
+engineers the previous day as to whether the 
+flight should go on as planned or not. Use the data
+given in SpaceShuttle.r to estimate failure probability depending on the temperature.
+
+
+```{r, echo=FALSE}
+space$Failure=(!(space$Total==0))*1
+SpaceShuttle=space
+print(SpaceShuttle[1:6,])
+```
+### Answer (a):
+We can fit a logistic regression:
+
+```{r, echo=FALSE}
+
+modelo=glm(Failure~Temperature,data = SpaceShuttle,
+             family =binomial)
+
+summary( modelo)
+confint(modelo)
+
+```
+We cant to explain in this point, that, zero is not include within the coefficient confidence interval, that's one more proof that the coefficients are significant.   
+
+
+Plot:
+
+```{r, echo=FALSE}
+
+SpaceShuttle$fit=predict(modelo,SpaceShuttle,se.fit=TRUE)[['fit']]
+SpaceShuttle$se.fit=predict(modelo,SpaceShuttle,se.fit=TRUE)[['se.fit']]
+SpaceShuttle$`Fit Lower Limit`=SpaceShuttle$fit-qnorm(0.975)*SpaceShuttle$se.fit
+SpaceShuttle$`Fit Upper Limit`=SpaceShuttle$fit+qnorm(0.975)*SpaceShuttle$se.fit
+
+SpaceShuttle$logist.fit=logist(SpaceShuttle$fit)
+
+SpaceShuttle$`Logist Fit Lower Limit`=logist(SpaceShuttle$`Fit Lower Limit`)
+SpaceShuttle$`Logist Fit Upper Limit`=logist(SpaceShuttle$`Fit Upper Limit`)
+
+
+ggplot(SpaceShuttle,aes(Temperature)) +
+  geom_point(aes(y=Failure,color=as.factor(Failure)),shape=16)+
+  geom_ribbon(aes(ymin = `Logist Fit Lower Limit`, ymax = `Logist Fit Upper Limit`), fill =  'lightblue1') +
+  geom_line(aes(y = `logist.fit`),color="blue")+
+  theme_classic()+
+  xlab('Temperature')+
+  ylab('Probability')+
+  scale_x_continuous(breaks =  SpaceShuttle$Temperature)+
+  theme(legend.position = 'none')
+
+
+
+
+
+  
+tttii=predict(modelo,as.data.frame(list(Temperature=c(31))),se.fit=TRUE)
+```
+
+Forecast to $31{}^\circ F$.
+```{r, echo=FALSE}
+cold=cbind(as.data.frame(list(Temperature=c(31))),as.data.frame(predict(modelo,as.data.frame(list(Temperature=c(31))),se.fit=TRUE)))  
+
+
+cold$`Fit Lower Limit`=cold$fit-qnorm(0.975)*cold$se.fit
+cold$`Fit Upper Limit`=cold$fit+qnorm(0.975)*cold$se.fit
+
+
+cold$Prediction=logist(cold$fit)
+
+cold$`Lower Limit`=logist(cold$`Fit Lower Limit`)
+cold$`Upper Limit`=logist(cold$`Fit Upper Limit`)
+
+cold=cold[,c(1,7,8,9)]
+print(cold)
+
+```
+
+Then it can be stated that the probability of damage to $31{}^\circ F$ is very high.
+
+
+
+
